@@ -1,5 +1,4 @@
   # Copyright(c) 2020 livoxtech limited.
-
   cmake_minimum_required(VERSION 3.14)
   project(livox_ros_driver2)
 
@@ -138,5 +137,5 @@
 
   ament_auto_package(INSTALL_TO_SHARE
     config
-    launch_ROS2
+    launch
   )
