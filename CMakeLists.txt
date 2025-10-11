@@ -124,6 +124,10 @@
     EXECUTABLE ${PROJECT_NAME}_node
   )
 
+  add_executable(lidar_timestep_pub src/led_timer/led_timer.cpp)
+  ament_target_dependencies(lidar_timestep_pub rclcpp std_msgs sensor_msgs)
+  install(TARGETS lidar_timestep_pub DESTINATION lib/${PROJECT_NAME})
+
   if(BUILD_TESTING)
     find_package(ament_lint_auto REQUIRED)
     # the following line skips the linter which checks for copyrights
