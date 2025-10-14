@@ -44,7 +44,8 @@ private:
 
         uint64_t full_time = (sec * 1000000000ULL) + nanosec;
 
-        uint64_t unix_led = static_cast<uint64_t>(full_time & 0x3FF);
+        // This is just for testing, gotta change it
+        uint64_t unix_led = static_cast<uint64_t>(full_time & 0x3FFFF);
 
         std_msgs::msg::Int32 out_msg;
         out_msg.data = static_cast<int32_t>(unix_led);
