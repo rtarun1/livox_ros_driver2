@@ -22,9 +22,6 @@ public:
         std::strftime(filename, sizeof(filename), "%Y-%m-%d-%H-%M-%S.bin", &tm);
 
         logfile_.open(filename, std::ios::binary | std::ios::out);
-        if (!logfile_.is_open()) {
-            RCLCPP_ERROR(this->get_logger(), "Failed to open log file!");
-        }
 
         publisher_ = this->create_publisher<std_msgs::msg::Int32>("/led_timestep", 10);
 
@@ -40,12 +37,17 @@ public:
 private:
     void timer_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
         uint64_t sec = msg->header.stamp.sec;
-        uint64_t nanosec = msg->header.stamp.nanosec;
+        uint32_t nanosec = msg->header.stamp.nanosec;
 
-        // Build 18-bit value: [sec LSB10 | nsec LSB8]
-        uint32_t sec_lsb10  = static_cast<uint32_t>(sec & 0x3FFu);   
-        uint32_t nsec_lsb8  = static_cast<uint32_t>(nanosec & 0xFFu); 
-        uint32_t unix_led   = (sec_lsb10 << 8) | nsec_lsb8;         
+        // 1. Get the 11 Least Significant Bits (LSBs) of the seconds
+        uint32_t sec_lsb11 = static_cast<uint32_t>(sec & 0x7FFu); // 0x7FF is the mask for 11 bits
+
+        // 2. Get the 7 Most Significant Bits (MSBs) of the nanoseconds
+        // A full nanosecond value uses ~30 bits, so we shift right by (30-7)=23
+        uint32_t nsec_msb7 = nanosec >> 23;
+
+        // 3. Combine them into an 18-bit value: [11 SEC BITS | 7 NANOSEC BITS]
+        int32_t unix_led = (sec_lsb11 << 7) | nsec_msb7;         
 
         std_msgs::msg::Int32 out_msg;
         out_msg.data = static_cast<int32_t>(unix_led);
@@ -56,7 +58,8 @@ private:
 
         if (logfile_.is_open()) {
             logfile_.write(reinterpret_cast<const char*>(&sec), sizeof(sec));
-            logfile_.write(reinterpret_cast<const char*>(&nanosec), sizeof(nanosec));
+            uint64_t nanosec_64 = nanosec; 
+            logfile_.write(reinterpret_cast<const char*>(&nanosec_64), sizeof(nanosec_64));
             logfile_.write(reinterpret_cast<const char*>(&unix_led), sizeof(unix_led));
         }
     }
