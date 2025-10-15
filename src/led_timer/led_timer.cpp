@@ -42,10 +42,10 @@ private:
         uint64_t sec = msg->header.stamp.sec;
         uint64_t nanosec = msg->header.stamp.nanosec;
 
-        uint64_t full_time = (sec * 1000000000ULL) + nanosec;
-
-        // This is just for testing, gotta change it
-        uint64_t unix_led = static_cast<uint64_t>(full_time & 0x3FFFF);
+        // Build 18-bit value: [sec LSB10 | nsec LSB8]
+        uint32_t sec_lsb10  = static_cast<uint32_t>(sec & 0x3FFu);   
+        uint32_t nsec_lsb8  = static_cast<uint32_t>(nanosec & 0xFFu); 
+        uint32_t unix_led   = (sec_lsb10 << 8) | nsec_lsb8;         
 
         std_msgs::msg::Int32 out_msg;
         out_msg.data = static_cast<int32_t>(unix_led);
